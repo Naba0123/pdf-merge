@@ -9,7 +9,7 @@ async function handleFileSelect(event) {
     const pdfList = document.getElementById('pdfList');
     pdfList.innerHTML = '';
 
-    for (let i = 0; i < files.length; i++) {
+    for (let i = 0; files.length; i++) {
         const file = files[i];
         if (file.type === 'application/pdf') {
             const arrayBuffer = await file.arrayBuffer();
@@ -22,18 +22,37 @@ async function handleFileSelect(event) {
             pdfList.appendChild(fileContainer);
 
             for (let j = 0; j < pdf.numPages; j++) {
-                const pageButton = document.createElement('button');
-                pageButton.className = 'button is-small';
-                pageButton.textContent = `Page ${j + 1}`;
-                pageButton.addEventListener('click', () => selectPage(file.name, j));
-                fileContainer.appendChild(pageButton);
+                const canvas = document.createElement('canvas');
+                canvas.className = 'thumbnail';
+                const context = canvas.getContext('2d');
+                const page = await pdf.getPage(j + 1);
+                const viewport = page.getViewport({ scale: 1.0 });
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                page.render({ canvasContext: context, viewport: viewport });
+
+                canvas.addEventListener('click', () => {
+                    canvas.classList.add('clicked');
+                    setTimeout(() => {
+                        canvas.classList.remove('clicked');
+                    }, 200);
+                    selectPage(file.name, j, canvas.toDataURL());
+                });
+                fileContainer.appendChild(canvas);
             }
         }
     }
 }
 
-function selectPage(fileName, pageIndex) {
-    selectedPages.push({ fileName, pageIndex });
+function selectPage(fileName, pageIndex, thumbnail) {
+    // すでに選択されているかチェック
+    const isAlreadySelected = selectedPages.some(page => page.fileName === fileName && page.pageIndex === pageIndex);
+    if (isAlreadySelected) {
+        alert('This page is already selected.');
+        return;
+    }
+
+    selectedPages.push({ fileName, pageIndex, thumbnail });
     updateSelectedPages();
 }
 
@@ -42,7 +61,13 @@ function updateSelectedPages() {
     selectedPagesList.innerHTML = '';
     selectedPages.forEach((page, index) => {
         const listItem = document.createElement('li');
-        listItem.textContent = `${page.fileName} - Page ${page.pageIndex + 1}`;
+        const img = document.createElement('img');
+        img.src = page.thumbnail;
+        img.className = 'selected-thumbnail';
+        listItem.appendChild(img);
+
+        const text = document.createTextNode(` ${page.fileName} - Page ${page.pageIndex + 1}`);
+        listItem.appendChild(text);
         listItem.setAttribute('data-index', index);
 
         const upButton = document.createElement('button');
@@ -65,6 +90,9 @@ function updateSelectedPages() {
 
         selectedPagesList.appendChild(listItem);
     });
+    // 自動スクロールを追加
+    const selectedPagesContainer = document.getElementById('selectedPagesContainer');
+    selectedPagesContainer.scrollTop = selectedPagesContainer.scrollHeight;
 }
 
 function movePageUp(index) {

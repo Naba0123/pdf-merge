@@ -11,13 +11,49 @@
             padding: 10px;
             margin-bottom: 10px;
         }
-        .selected-pages {
-            margin-top: 20px;
+        .thumbnail {
+            width: 400px;
+            height: 400px;
+            object-fit: cover;
+            margin: 5px;
+            cursor: pointer;
+            border: 2px solid blue;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .thumbnail.clicked {
+            transform: scale(0.95);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+        }
+        .selected-pages-container {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 30%;
+            height: 100%;
+            overflow-y: auto;
+            background-color: #f5f5f5;
+            padding: 10px;
+            box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+        }
+        .selected-thumbnail {
+            width: 300px;
+            height: 300px;
+            object-fit: cover;
+            margin: 5px;
+            animation: fadeIn 0.5s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .main-content {
+            margin-right: 30%;
         }
     </style>
+
 </head>
 <body>
-<div class="container">
+<div class="container main-content">
     <section class="section">
         <h1 class="title">PDF Merger</h1>
 
@@ -33,14 +69,12 @@
         <div class="buttons">
             <button id="mergeButton" class="button is-primary">Merge PDFs</button>
         </div>
-
-        <div id="selectedPagesContainer" class="content selected-pages">
-            <h2 class="title">Selected Pages</h2>
-            <ul id="selectedPagesList"></ul>
-        </div>
-
-        <div id="output" class="content"></div>
     </section>
+</div>
+
+<div id="selectedPagesContainer" class="selected-pages-container">
+    <h2 class="title">Selected Pages</h2>
+    <ul id="selectedPagesList" class="content"></ul>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.6.347/pdf.min.js"></script>
