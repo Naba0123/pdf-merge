@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Merger</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.3/css/bulma.min.css">
+    <style>
+        .pdf-preview {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        .selected-pages {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <section class="section">
+        <h1 class="title">PDF Merger</h1>
+
+        <div class="field">
+            <label class="label">Select PDFs</label>
+            <div class="control">
+                <input id="pdfInput" class="input" type="file" accept=".pdf" multiple>
+            </div>
+        </div>
+
+        <div id="pdfList" class="content"></div>
+
+        <div class="buttons">
+            <button id="mergeButton" class="button is-primary">Merge PDFs</button>
+        </div>
+
+        <div id="selectedPagesContainer" class="content selected-pages">
+            <h2 class="title">Selected Pages</h2>
+            <ul id="selectedPagesList"></ul>
+        </div>
+
+        <div id="output" class="content"></div>
+    </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.6.347/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
