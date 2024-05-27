@@ -9,8 +9,11 @@ async function handleFileSelect(event) {
     const pdfList = document.getElementById('pdfList');
     pdfList.innerHTML = '';
 
-    for (let i = 0; files.length; i++) {
-        const file = files[i];
+    // ファイル名順で並び替え
+    const sortedFiles = Array.from(files).sort((a, b) => a.name.localeCompare(b.name));
+
+    for (let i = 0; sortedFiles.length; i++) {
+        const file = sortedFiles[i];
         if (file.type === 'application/pdf') {
             const arrayBuffer = await file.arrayBuffer();
             const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
@@ -22,6 +25,8 @@ async function handleFileSelect(event) {
             pdfList.appendChild(fileContainer);
 
             for (let j = 0; j < pdf.numPages; j++) {
+                const pageContainer = document.createElement('div');
+
                 const canvas = document.createElement('canvas');
                 canvas.className = 'thumbnail';
                 const context = canvas.getContext('2d');
@@ -38,7 +43,13 @@ async function handleFileSelect(event) {
                     }, 200);
                     selectPage(file.name, j, canvas.toDataURL());
                 });
-                fileContainer.appendChild(canvas);
+                pageContainer.appendChild(canvas);
+
+                const pageNumber = document.createElement('span');
+                pageNumber.textContent = `${file.name} (Page ${j + 1})`;
+                pageContainer.appendChild(pageNumber);
+
+                fileContainer.appendChild(pageContainer);
             }
         }
     }
@@ -64,6 +75,10 @@ function updateSelectedPages() {
         const img = document.createElement('img');
         img.src = page.thumbnail;
         img.className = 'selected-thumbnail';
+        // 最後の要素はselected-thumbnail-lastを追加
+        if (index === selectedPages.length - 1) {
+            img.classList.add('selected-thumbnail-last');
+        }
         listItem.appendChild(img);
 
         const text = document.createTextNode(` ${page.fileName} - Page ${page.pageIndex + 1}`);

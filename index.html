@@ -11,6 +11,7 @@
             padding: 10px;
             margin-bottom: 10px;
         }
+
         .thumbnail {
             width: 400px;
             height: 400px;
@@ -20,10 +21,12 @@
             border: 2px solid blue;
             transition: transform 0.2s, box-shadow 0.2s;
         }
+
         .thumbnail.clicked {
             transform: scale(0.95);
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
         }
+
         .selected-pages-container {
             position: fixed;
             top: 0;
@@ -35,17 +38,27 @@
             padding: 10px;
             box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
         }
+
         .selected-thumbnail {
             width: 300px;
             height: 300px;
             object-fit: cover;
             margin: 5px;
+        }
+
+        .selected-thumbnail-last {
             animation: fadeIn 0.5s;
         }
+
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
         }
+
         .main-content {
             margin-right: 30%;
         }
