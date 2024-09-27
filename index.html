@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDF Merger</title>
+    <title>PDF and Image Merger</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.3/css/bulma.min.css">
     <style>
         .pdf-preview {
@@ -68,25 +68,25 @@
 <body>
 <div class="container main-content">
     <section class="section">
-        <h1 class="title">PDF Merger</h1>
+        <h1 class="title">PDF and Image Merger</h1>
 
         <div class="field">
-            <label class="label">Select PDFs</label>
+            <label class="label">Select PDFs or Images (JPG, PNG)</label>
             <div class="control">
-                <input id="pdfInput" class="input" type="file" accept=".pdf" multiple>
+                <input id="pdfInput" class="input" type="file" accept=".pdf,.jpg,.png" multiple>
             </div>
         </div>
 
         <div id="pdfList" class="content"></div>
 
         <div class="buttons">
-            <button id="mergeButton" class="button is-primary">Merge PDFs</button>
+            <button id="mergeButton" class="button is-primary">Merge PDFs and Images</button>
         </div>
     </section>
 </div>
 
 <div id="selectedPagesContainer" class="selected-pages-container">
-    <h2 class="title">Selected Pages</h2>
+    <h2 class="title">Selected Pages and Images</h2>
     <ul id="selectedPagesList" class="content"></ul>
 </div>
 

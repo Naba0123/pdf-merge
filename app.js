@@ -2,6 +2,7 @@ document.getElementById('pdfInput').addEventListener('change', handleFileSelect)
 document.getElementById('mergeButton').addEventListener('click', mergePdfs);
 
 const pdfFiles = [];
+const imageFiles = [];
 const selectedPages = [];
 
 async function handleFileSelect(event) {
@@ -12,9 +13,11 @@ async function handleFileSelect(event) {
     // ファイル名順で並び替え
     const sortedFiles = Array.from(files).sort((a, b) => a.name.localeCompare(b.name));
 
-    for (let i = 0; sortedFiles.length; i++) {
+    for (let i = 0; i < sortedFiles.length; i++) {
         const file = sortedFiles[i];
+
         if (file.type === 'application/pdf') {
+            // PDFの場合
             const arrayBuffer = await file.arrayBuffer();
             const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
             pdfFiles.push({ file, pdf });
@@ -41,7 +44,7 @@ async function handleFileSelect(event) {
                     setTimeout(() => {
                         canvas.classList.remove('clicked');
                     }, 200);
-                    selectPage(file.name, j, canvas.toDataURL());
+                    selectPage(file.name, j, canvas.toDataURL(), 'pdf');
                 });
                 pageContainer.appendChild(canvas);
 
@@ -51,19 +54,43 @@ async function handleFileSelect(event) {
 
                 fileContainer.appendChild(pageContainer);
             }
+        } else if (file.type.startsWith('image/')) {
+            // 画像の場合
+            const imageURL = URL.createObjectURL(file);
+            const img = new Image();
+            img.src = imageURL;
+            img.className = 'thumbnail';
+
+            img.onload = () => {
+                const fileContainer = document.createElement('div');
+                fileContainer.className = 'pdf-preview';
+                fileContainer.innerHTML = `<strong>${file.name}</strong>`;
+                pdfList.appendChild(fileContainer);
+
+                img.addEventListener('click', () => {
+                    img.classList.add('clicked');
+                    setTimeout(() => {
+                        img.classList.remove('clicked');
+                    }, 200);
+                    selectPage(file.name, 0, imageURL, 'image');
+                });
+
+                fileContainer.appendChild(img);
+                imageFiles.push({ file, img });
+            };
         }
     }
 }
 
-function selectPage(fileName, pageIndex, thumbnail) {
+function selectPage(fileName, pageIndex, thumbnail, type) {
     // すでに選択されているかチェック
-    const isAlreadySelected = selectedPages.some(page => page.fileName === fileName && page.pageIndex === pageIndex);
+    const isAlreadySelected = selectedPages.some(page => page.fileName === fileName && page.pageIndex === pageIndex && page.type === type);
     if (isAlreadySelected) {
         alert('This page is already selected.');
         return;
     }
 
-    selectedPages.push({ fileName, pageIndex, thumbnail });
+    selectedPages.push({ fileName, pageIndex, thumbnail, type });
     updateSelectedPages();
 }
 
@@ -81,7 +108,7 @@ function updateSelectedPages() {
         }
         listItem.appendChild(img);
 
-        const text = document.createTextNode(` ${page.fileName} - Page ${page.pageIndex + 1}`);
+        const text = document.createTextNode(` ${page.fileName} - ${page.type === 'pdf' ? 'Page ' + (page.pageIndex + 1) : 'Image'}`);
         listItem.appendChild(text);
         listItem.setAttribute('data-index', index);
 
@@ -135,19 +162,27 @@ function deletePage(index) {
 
 async function mergePdfs() {
     if (selectedPages.length === 0) {
-        alert('Please select at least one page from a PDF file.');
+        alert('Please select at least one page from a PDF file or image.');
         return;
     }
 
     const mergedPdf = await PDFLib.PDFDocument.create();
 
-    for (const { fileName, pageIndex } of selectedPages) {
-        const file = pdfFiles.find(f => f.file.name === fileName).file;
-        const arrayBuffer = await file.arrayBuffer();
-        const pdfLibDoc = await PDFLib.PDFDocument.load(arrayBuffer);
+    for (const { fileName, pageIndex, type } of selectedPages) {
+        if (type === 'pdf') {
+            const file = pdfFiles.find(f => f.file.name === fileName).file;
+            const arrayBuffer = await file.arrayBuffer();
+            const pdfLibDoc = await PDFLib.PDFDocument.load(arrayBuffer);
 
-        const [page] = await mergedPdf.copyPages(pdfLibDoc, [pageIndex]);
-        mergedPdf.addPage(page);
+            const [page] = await mergedPdf.copyPages(pdfLibDoc, [pageIndex]);
+            mergedPdf.addPage(page);
+        } else if (type === 'image') {
+            const file = imageFiles.find(f => f.file.name === fileName).file;
+            const imageBytes = await file.arrayBuffer();
+            const image = await mergedPdf.embedJpg(imageBytes);
+            const page = mergedPdf.addPage([image.width, image.height]);
+            page.drawImage(image, { x: 0, y: 0, width: image.width, height: image.height });
+        }
     }
 
     const mergedPdfBytes = await mergedPdf.save();
