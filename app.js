@@ -39,13 +39,12 @@ async function handleFileSelect(event) {
                 canvas.height = viewport.height;
                 page.render({ canvasContext: context, viewport: viewport });
 
-                canvas.addEventListener('click', () => {
-                    canvas.classList.add('clicked');
-                    setTimeout(() => {
-                        canvas.classList.remove('clicked');
-                    }, 200);
-                    selectPage(file.name, j, canvas.toDataURL(), 'pdf');
-                });
+                canvas.setAttribute('data-filename', file.name);
+                canvas.setAttribute('data-pageindex', j);
+
+                // サムネイルクリック時の処理
+                canvas.addEventListener('click', () => handleThumbnailClick(file.name, j, canvas, 'pdf'));
+
                 pageContainer.appendChild(canvas);
 
                 const pageNumber = document.createElement('span');
@@ -67,13 +66,10 @@ async function handleFileSelect(event) {
                 fileContainer.innerHTML = `<strong>${file.name}</strong>`;
                 pdfList.appendChild(fileContainer);
 
-                img.addEventListener('click', () => {
-                    img.classList.add('clicked');
-                    setTimeout(() => {
-                        img.classList.remove('clicked');
-                    }, 200);
-                    selectPage(file.name, 0, imageURL, 'image');
-                });
+                img.setAttribute('data-filename', file.name);
+                img.setAttribute('data-pageindex', 0);
+
+                img.addEventListener('click', () => handleThumbnailClick(file.name, 0, img, 'image'));
 
                 fileContainer.appendChild(img);
                 imageFiles.push({ file, img });
@@ -82,14 +78,21 @@ async function handleFileSelect(event) {
     }
 }
 
-function selectPage(fileName, pageIndex, thumbnail, type) {
+// サムネイルクリック時の処理
+function handleThumbnailClick(fileName, pageIndex, element, type) {
     // すでに選択されているかチェック
     const isAlreadySelected = selectedPages.some(page => page.fileName === fileName && page.pageIndex === pageIndex && page.type === type);
     if (isAlreadySelected) {
-        alert('This page is already selected.');
         return;
     }
 
+    // 選択済みにする
+    selectPage(fileName, pageIndex, element.toDataURL ? element.toDataURL() : element.src, type);
+    element.classList.add('grayed-out'); // グレーアウトする
+    element.style.pointerEvents = 'none'; // クリックできないようにする
+}
+
+function selectPage(fileName, pageIndex, thumbnail, type) {
     selectedPages.push({ fileName, pageIndex, thumbnail, type });
     updateSelectedPages();
 }
@@ -107,6 +110,8 @@ function updateSelectedPages() {
             img.classList.add('selected-thumbnail-last');
         }
         listItem.appendChild(img);
+
+        listItem.appendChild(document.createElement('br'));
 
         const text = document.createTextNode(` ${page.fileName} - ${page.type === 'pdf' ? 'Page ' + (page.pageIndex + 1) : 'Image'}`);
         listItem.appendChild(text);
@@ -156,7 +161,20 @@ function movePageDown(index) {
 }
 
 function deletePage(index) {
-    selectedPages.splice(index, 1);
+    const deletedPage = selectedPages.splice(index, 1)[0];
+
+    // 左側リストで選択解除する要素を有効化し直す
+    if (deletedPage.type === 'pdf') {
+        const file = pdfFiles.find(f => f.file.name === deletedPage.fileName);
+        const element = document.querySelector(`canvas[data-filename="${deletedPage.fileName}"][data-pageindex="${deletedPage.pageIndex}"]`);
+        element.classList.remove('grayed-out');
+        element.style.pointerEvents = 'auto';
+    } else if (deletedPage.type === 'image') {
+        const element = document.querySelector(`img[src="${deletedPage.thumbnail}"]`);
+        element.classList.remove('grayed-out');
+        element.style.pointerEvents = 'auto';
+    }
+
     updateSelectedPages();
 }
 
